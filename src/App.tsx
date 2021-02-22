@@ -1,6 +1,15 @@
 import React from "react";
-import HelloWorld from "./components/HelloWorld";
+import CompOne from "./components/compone";
+import CompTwo from "./components/comptwo"
 
-const App = () => <HelloWorld />;
+const App = () => {
+    return (
+        <div>
+            <h1>App</h1>
+            <CompOne />
+            <CompTwo />
+        </div>
+    )
+};
 
 export default App;

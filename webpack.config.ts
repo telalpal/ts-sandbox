@@ -1,10 +1,22 @@
 import path from "path";
-import webpack, {Configuration} from "webpack";
+import {Configuration, WebpackPluginInstance} from "webpack";
+import ReactRefreshPlugin from "@pmmmwh/react-refresh-webpack-plugin";
 import * as webpackDevServer from 'webpack-dev-server';
 import HtmlWebpackPlugin from "html-webpack-plugin";
+import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 
-const webpackConfig = (env: any): Configuration => ({
+
+const isDevelopment = process.env.NODE_ENV !== 'production';
+const devPlugins: WebpackPluginInstance[] = [];
+if (isDevelopment) {
+    devPlugins.concat([
+        new ReactRefreshPlugin(),
+    ])
+}
+
+const webpackConfig = (): Configuration => ({
     entry: "./src/index.tsx",
+    mode: isDevelopment ? 'development' : 'production',
     resolve: {
         extensions: [".ts", ".tsx", ".js"]
     },
@@ -16,8 +28,21 @@ const webpackConfig = (env: any): Configuration => ({
         rules: [
             {
                 test: /\.tsx?$/,
-                loader: 'awesome-typescript-loader',
-                exclude: /dist/
+                exclude: [/dist/, /node_modules/],
+                use: [
+                    ...(
+                        isDevelopment ? [
+                            {
+                                loader: 'babel-loader',
+                                options: { plugins: ['react-refresh/babel'] },
+                            },
+                        ] : []
+                    ),
+                    {
+                        loader: 'ts-loader',
+                        options: { transpileOnly: true },
+                    },
+                ].filter(Boolean),
             }
         ],
     },
@@ -38,13 +63,12 @@ const webpackConfig = (env: any): Configuration => ({
         },
     },
     plugins: [
+        ...(isDevelopment ? [
+            new ReactRefreshPlugin(),
+        ] : []),
+        new ForkTsCheckerWebpackPlugin(),
         new HtmlWebpackPlugin(),
-        new webpack.DefinePlugin({
-            "process.env.PRODUCTION": env.production || !env.development,
-            "process.env.NAME": JSON.stringify(require("./package.json").name),
-            "process.env.VERSION": JSON.stringify(require("./package.json").version)
-        })
-    ]
+    ],
 });
 
 export default webpackConfig;
